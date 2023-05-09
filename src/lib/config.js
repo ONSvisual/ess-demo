@@ -11,12 +11,12 @@ export const colors = {
 };
 
 export const datasets = [
-  {
-    "code": "population",
-    "label": "Population",
-    "years": [2001, 2020],
-    "unit": "people"
-  },
+  // {
+  //   "code": "population",
+  //   "label": "Population",
+  //   "years": [2001, 2020],
+  //   "unit": "people"
+  // },
   {
     "code": "density",
     "label": "Density",

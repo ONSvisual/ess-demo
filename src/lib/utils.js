@@ -42,23 +42,25 @@ export async function getDataset(dataset, fetch = window.fetch) {
     const year_vals = places.map(a => a[`${y}`]).sort((a, b) => a - b);
     breaks[`${y}`] = [...ckmeans(year_vals, 5), year_vals[year_vals.length - 1]];
   })
-  places.forEach(a => {
+  const lookup = {};
+  places.forEach(p => {
     for (let i = 0; i < years.length; i ++) {
-      a[`${years[i]}_ind`] = (a[`${years[i]}`] / uk[`${years[i]}`]) * 100;
-      a[`${years[i]}_color`] = getColor(a[`${years[i]}`], breaks[`${years[i]}`]);
+      p[`${years[i]}_ind`] = (p[`${years[i]}`] / uk[`${years[i]}`]) * 100;
+      p[`${years[i]}_color`] = getColor(p[`${years[i]}`], breaks[`${years[i]}`]);
       if (i > 0) {
-        a[`${years[i]}_change_abs_ind`] = (a[`${years[i]}_change_abs`] / uk[`${years[i]}_change_abs`]) * 100;
-        a[`${years[i]}_change_perc_ind`] = (a[`${years[i]}_change_perc`] / uk[`${years[i]}_change_perc`]) * 100;
-        a[`${years[i]}_biv_color`] = colors.biv[a[`${years[i]}_ind`] >= 100 ? 1 : 0][a[`${years[i]}_change_abs_ind`] >= 100 ? 1 : 0];
+        p[`${years[i]}_change_abs_ind`] = (p[`${years[i]}_change_abs`] / uk[`${years[i]}_change_abs`]) * 100;
+        p[`${years[i]}_change_perc_ind`] = (p[`${years[i]}_change_perc`] / uk[`${years[i]}_change_perc`]) * 100;
+        p[`${years[i]}_biv_color`] = colors.biv[p[`${years[i]}_ind`] >= 100 ? 1 : 0][p[`${years[i]}_change_perc`] >= 0 ? 1 : 0];
       }
     }
+    lookup[p.areacd] = p;
   });
-  return {uk, places, breaks, years};
+  return {uk, places, lookup, breaks, years};
 }
 
 export async function getPlaces(fetch = window.fetch) {
   const res = await fetch(`${base}/data/places.csv`);
-  return csvParse(await res.text(), autoType);
+  return csvParse(await res.text(), autoType).sort((a, b) => a.areanm.localeCompare(b.areanm));
 }
 
 export async function getTopo(fetch = window.fetch) {
@@ -74,7 +76,9 @@ export function getYear(state) {
   return year;
 }
 
-export function makeLongData(data, years) {
+export function makeLongData(allData, code) {
+  const data = allData.data[code].places;
+  const years = allData.data[code].years;
   const longData = [];
   data.forEach(d => {
     years.forEach(y => {
@@ -103,8 +107,22 @@ function ascending(a, b) {
   return a == null || b == null ? NaN : a < b ? -1 : a > b ? 1 : a >= b ? 0 : NaN;
 }
 
-export function commas(num) {
-	const parts = String(num).split('.');
+export function numToString(num, dp = 0) {
+  const divisor = Math.pow(10, dp);
+  const rounded = (Math.round(+num * divisor) / divisor).toFixed(dp < 0 ? 0 : dp);
+	const parts = String(rounded).split('.');
 	parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 	return parts.join('.');
 }
+
+export function format(num, unit, mode = "default") {
+  let dp = ["%", "years", "people per sq. km"].includes(unit) ? 1 : 0;
+  let str = numToString(Math.abs(num), dp);
+  if (unit === "£") str = `${unit}${str}`;
+  else if (unit === "%") str = `${str}${unit}`;
+  else str = `${str} ${unit}`;
+  if (mode === "sign") str = `${num > 0 ? "&uarr;" : num < 0 ? "&darr;" : ""}${str}`;
+  return str;
+}
+
+export const ukTick = () => "UK avg.";

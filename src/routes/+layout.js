@@ -1,9 +1,14 @@
 import { getTopo, getPlaces, getDataset } from "$lib/utils";
 import { datasets } from "$lib/config";
 
+export const prerender = true;
+export const trailingSlash = "always";
+
 export async function load({ fetch }) {
   const geojson = await getTopo(fetch);
-  const places = geojson.features.map(f => f.properties).sort((a, b) => a.areanm.localeCompare(b.areanm));
+  const places = await getPlaces(fetch);
+  const lookup = {};
+  places.forEach(p => lookup[p.areacd] = p);
   const data = {};
   let yrs = [];
   for (let dataset of datasets) {
@@ -12,5 +17,5 @@ export async function load({ fetch }) {
     yrs = [...yrs, ...dat.years];
   }
   const years = Array.from(new Set(yrs)).sort((a, b) => a - b);
-  return {data, geojson, places, years};
+  return {data, geojson, places, lookup, years};
 }

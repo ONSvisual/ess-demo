@@ -1,10 +1,12 @@
 <script>
-  import { sortData, commas } from "$lib/utils";
+  import { sortData, numToString } from "$lib/utils";
 
   export let data;
   export let years;
+  export let unit;
 
   $: _data = [...data];
+  $: dp = ["%", "years", "people per sq. km"].includes(unit) ? 1 : 0;
 </script>
 
 <div class="table-container">
@@ -36,7 +38,7 @@
         <td>{d.areanm}</td>
         <td>{d.areacd}</td>
         {#each years as y}
-        <td class="right">{commas(d[`${y}`])}</td>
+        <td class="right">{numToString(d[`${y}`], dp)}</td>
         {/each}
       </tr>
       {/each}
