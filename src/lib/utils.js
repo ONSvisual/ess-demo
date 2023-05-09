@@ -80,8 +80,8 @@ export function makeLongData(allData, code) {
   const data = allData.data[code].places;
   const years = allData.data[code].years;
   const longData = [];
-  data.forEach(d => {
-    years.forEach(y => {
+  for (const d of data) {
+    for (const y of years) {
       longData.push({
         areacd: d.areacd,
         areanm: d.areanm,
@@ -89,8 +89,8 @@ export function makeLongData(allData, code) {
         val: d[`${y}`],
         ind: d[`${y}_ind`]
       });
-    });
-  });
+    }
+  }
   return longData;
 }
 
